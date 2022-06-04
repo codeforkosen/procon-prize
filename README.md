@@ -2,5 +2,5 @@
 
 ## demo
 
-- [https://didbbs.code4fukui.org](DID掲示板)
+- [DID掲示板](https://didbbs.code4fukui.org)
 
