@@ -4,6 +4,7 @@ import { Ed25519 } from "https://code4fukui.github.io/Ed25519/Ed25519.js";
 import { Text } from "https://code4fukui.github.io/Ed25519/Text.js";
 import { DIDKey } from "https://code4fukui.github.io/Ed25519/DIDKey.js";
 
+const port = Deno.args[0] || 8001;
 const bbs = new JSONDB("bbs.json");
 
 const checkSign = (did, body) => { // throws
@@ -48,4 +49,4 @@ class MyServer extends Server {
   }
 }
 
-new MyServer(8001);
+new MyServer(port);
