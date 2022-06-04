@@ -1,0 +1,85 @@
+<!DOCTYPE html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width">
+<title>DID掲示板</title>
+
+<script type="module">
+import { fetchJSON } from "https://js.sabae.cc/fetchJSON.js";
+import { enc } from "https://js.sabae.cc/enc.js";
+import { DateTime } from "https://code4fukui.github.io/day-es/DateTime.js";
+import { hash } from "https://js.sabae.cc/hash.js";
+
+window.onload = async () => {
+  const load = async () => {
+    const data = await fetchJSON("api/list");
+    console.log(data);
+    container.innerHTML = "";
+    for (const d of data) {
+      const div = document.createElement("div");
+      div.className = "bbsitem";
+      div.innerHTML = `<span class=date>${enc(d.date)}</span>
+       by <span class=name>${d.did}</span>
+        <div class=body>${enc(d.body)}</div>`
+      container.appendChild(div);
+    }
+  };
+  load();
+
+  btn_write.onclick = async () => {
+    const item = {
+      did: inp_did.value,
+      body: inp_body.value,
+      date: new DateTime(),
+    };
+    if (await fetchJSON("api/add", item) != "ok") {
+      alert("書き込みに失敗しました");
+      return;
+    }
+    inp_body.value = "";
+    await load();
+  };
+};
+</script>
+
+<style>
+.bbsitem {
+  border-top: 1px solid gray;
+  margin: 1em;
+  word-wrap: break-word;
+}
+.bbsitem .body {
+  border: 1px solid black;
+  padding: .5em;
+}
+.writebox {
+  border: 2px solid gray;
+  padding: 1em;
+  margin: 1em;
+}
+input, textarea {
+  width: 80%;
+}
+textarea {
+  height: 8em;
+}
+</style>
+
+<link rel="stylesheet" href="https://unpkg.com/sakura.css/css/sakura.css" type="text/css">
+</head>
+
+<body>
+<h1>DID掲示板</h1>
+<div id=container></div>
+
+<div id=write class=writebox>
+  DID：<input type=text id=inp_did><br>
+  <textarea id=inp_body></textarea><br>
+  <button id=btn_write>書き込む（署名必須）</button><br>
+  ※DIDと署名付き名前は「<a href=https://code4fukui.github.io/Ed25519/>DID電子署名ツール</a>」で生成可能です
+</div>
+
+<footer>
+  <div>App: CC BY <a href=https://fukuno.jig.jp/3315>@taisukef</a></div>
+  <div>Lib: MIT <a href=https://github.com/code4fukui/Ed25519/>Ed25519</a></div>
+</footer>
+</body>
+
+</html>
