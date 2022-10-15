@@ -10,7 +10,8 @@
 <div id=container></div>
 
 <footer>
-  <div>App: CC BY <a href=https://twitter.com/taisukef>@taisukef</a></div>
+  <div>App: CC BY <a href=https://codeforkosen.github.io/>Code for KOSEN</a></div>
+  <div>Trust: <a href=https://github.com/code4fukui/Ed25519>Ed25519</a></div>
   <div><a href=https://github.com/codeforkosen/proconbbs>src on GitHub</a></div>
   <script type="module" src="https://code4fukui.github.io/qr-code/qr-code.js"></script>
   <qr-code></qr-code>
@@ -23,6 +24,15 @@ import { enc } from "https://js.sabae.cc/enc.js";
 import { DateTime } from "https://code4fukui.github.io/day-es/DateTime.js";
 import { TrustData } from "https://code4fukui.github.io/DataWithTrust/TrustData.js";
 import { Base16 } from "https://code4fukui.github.io/Base16/Base16.js";
+import { Ed25519 } from "https://code4fukui.github.io/Ed25519/Ed25519.js";
+
+const sign = (user, text) => {
+  const message = new TextEncoder().encode(text);
+  const signature = Ed25519.sign({ privateKey: user.secret, message, encodeing: "binary" });
+  //const chk = Ed25519.verify({ signature, publicKey: user.did, message, encoding: "binary" });
+  //console.log(chk);
+  return signature;
+};
 
 const getUser = () => {
   const did = localStorage.getItem("did");
@@ -93,7 +103,6 @@ for (const t of data) {
   };
   btn.onclick = async () => {
     const user = getUser();
-    console.log(user);
     const comment = inp.value;
     const item = {
       id: t.id,
@@ -102,6 +111,7 @@ for (const t of data) {
       body: comment,
       date: new DateTime().toString(),
     };
+    item.sign = Base16.encode(sign(user, item.body + "\n" + item.date));
     if (await write(item)) {
       inp.value = "";
       const add = addComment(item, null);
