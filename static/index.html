@@ -25,6 +25,8 @@ import { DateTime } from "https://code4fukui.github.io/day-es/DateTime.js";
 import { TrustData } from "https://code4fukui.github.io/DataWithTrust/TrustData.js";
 import { Base16 } from "https://code4fukui.github.io/Base16/Base16.js";
 import { Ed25519 } from "https://code4fukui.github.io/Ed25519/Ed25519.js";
+import { fix0 } from "https://js.sabae.cc/fix0.js";
+import { CSV } from "https://js.sabae.cc/CSV.js";
 
 const sign = (user, text) => {
   const message = new TextEncoder().encode(text);
@@ -51,6 +53,9 @@ const getUser = () => {
   }
 };
 
+const url = "https://codeforkosen.github.io/kosen-opendata/data/procon/procon2022.csv";
+const opendata = await CSV.fetchJSON(url);
+
 const data = await fetchJSON("api/list");
 container.innerHTML = "";
 const cr = (tag, p) => {
@@ -65,11 +70,13 @@ for (const t of data) {
   if (pickid && t.id != pickid) {
     continue;
   }
+  const d = opendata.find(o => o.type == t.type && o.num == t.num);
+
   const topic = cr("div", container);
   topic.className = "topic";
   const name = cr("div", topic);
   const items = t.items;
-  name.innerHTML = `<a href="./#${t.id}" target=_blank>${t.type.substring(0, 2)}-${t.num}</a>: ${t.title + t.description} by ${t.kosen} (${items.length}件)`;
+  name.innerHTML = `<a href="./#${t.id}" target=_blank>${t.type.substring(0, 2)}-${t.num}</a>: ${t.title + t.description} by ${t.kosen} (${items.length}件${d.photo ? " / 写真" : ""})`;
   const comments = cr("div", topic);
   comments.style.display = pickid ? "block" : "none";
   comments.className = "comments";
@@ -122,6 +129,17 @@ for (const t of data) {
       comments.insertBefore(add, combox);
     }
   };
+  // photo & poster image
+  if (d.photo) {
+    const img = new Image();
+    img.loading = "lazy";
+    img.src = d.photo;
+    comments.appendChild(img);
+  }
+  const img = new Image();
+  img.loading = "lazy";
+  img.src = d.poster;
+  comments.appendChild(img);
 }
 </script>
 
@@ -132,7 +150,6 @@ h1 a {
 .topic {
   margin-bottom: 16px;
 }
-
 .comments {
   padding-left: 1em;
   margin-bottom: 8px;
@@ -149,6 +166,10 @@ h1 a {
 .comments input {
   width: 70vw;
   font-size: 16px;
+}
+.bbsitem img {
+  width: 90vw;
+  margin-top: .5em;
 }
 </style>
   
