@@ -5,7 +5,7 @@
 </head>
 <body>
 
-<h1>高専プロコン掲示板#33</h1>
+<h1><a href=./>高専プロコン掲示板#33</a></h1>
 
 <div id=container></div>
 
@@ -60,14 +60,18 @@ const cr = (tag, p) => {
   }
   return c;
 };
+const pickid = location.hash.substring(1);
 for (const t of data) {
+  if (pickid && t.id != pickid) {
+    continue;
+  }
   const topic = cr("div", container);
   topic.className = "topic";
   const name = cr("div", topic);
   const items = t.items;
-  name.textContent = t.type.substring(0, 2) + '-' + t.num + ': ' + t.title + t.description + " by " + t.kosen + " (" + items.length + "件)";
+  name.innerHTML = `<a href="./#${t.id}" target=_blank>${t.type.substring(0, 2)}-${t.num}</a>: ${t.title + t.description} by ${t.kosen} (${items.length}件)`;
   const comments = cr("div", topic);
-  comments.style.display = "none";
+  comments.style.display = pickid ? "block" : "none";
   comments.className = "comments";
   const addComment = (d, parent) => {
     console.log(d, parent);
@@ -122,6 +126,9 @@ for (const t of data) {
 </script>
 
 <style>
+h1 a {
+  text-decoration: none;
+}
 .topic {
   margin-bottom: 16px;
 }
