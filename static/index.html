@@ -33,8 +33,8 @@ const getUser = () => {
     const user = TrustData.createUser();
     localStorage.setItem("did", Base16.encode(user.did));
     localStorage.setItem("secret", Base16.encode(user.secret));
-    const nickname = prompt("ニックネームを入力ください") || "noname";
-    localStorage.setItem("nickname", nickname);
+    user.nickname = prompt("ニックネームを入力ください") || "noname";
+    localStorage.setItem("nickname", user.nickname);
     return user;
   }
 };
