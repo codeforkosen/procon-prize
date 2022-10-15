@@ -1,85 +1,124 @@
 <!DOCTYPE html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width">
-<title>DID掲示板</title>
+<title>高専プロコン掲示板#33</title>
+
+<link rel="stylesheet" href="https://unpkg.com/sakura.css/css/sakura.css" type="text/css">
+</head>
+<body>
+
+<h1>高専プロコン掲示板#33</h1>
+
+<div id=container></div>
+
+<footer>
+  <div>App: CC BY <a href=https://twitter.com/taisukef>@taisukef</a></div>
+</footer>
+</body>
 
 <script type="module">
 import { fetchJSON } from "https://js.sabae.cc/fetchJSON.js";
 import { enc } from "https://js.sabae.cc/enc.js";
 import { DateTime } from "https://code4fukui.github.io/day-es/DateTime.js";
-import { hash } from "https://js.sabae.cc/hash.js";
+import { TrustData } from "https://code4fukui.github.io/DataWithTrust/TrustData.js";
+import { Base16 } from "https://code4fukui.github.io/Base16/Base16.js";
 
-window.onload = async () => {
-  const load = async () => {
-    const data = await fetchJSON("api/list");
-    console.log(data);
-    container.innerHTML = "";
-    for (const d of data) {
-      const div = document.createElement("div");
-      div.className = "bbsitem";
-      div.innerHTML = `<span class=date>${enc(d.date)}</span>
-       by <span class=name>${d.did}</span>
-        <div class=body>${enc(d.body)}</div>`
-      container.appendChild(div);
+const getUser = () => {
+  const did = localStorage.getItem("did");
+  const secret = localStorage.getItem("secret");
+  const nickname = localStorage.getItem("nickname");
+  if (did && secret) {
+    return { did: Base16.decode(did), secret: Base16.decode(secret), nickname };
+  }
+  {
+    const user = TrustData.createUser();
+    localStorage.setItem("did", Base16.encode(user.did));
+    localStorage.setItem("secret", Base16.encode(user.secret));
+    const nickname = prompt("ニックネームを入力ください") || "noname";
+    localStorage.setItem("nickname", nickname);
+    return user;
+  }
+};
+
+const data = await fetchJSON("api/list");
+container.innerHTML = "";
+const cr = (tag, p) => {
+  const c = document.createElement(tag);
+  if (p) {
+    p.appendChild(c);
+  }
+  return c;
+};
+for (const t of data) {
+  const topic = cr("div", container);
+  topic.className = "topic";
+  const name = cr("div", topic);
+  const items = t.items;
+  name.textContent = t.title + t.description + " by " + t.kosen + " (" + items.length + "件)";
+  const comments = cr("div", topic);
+  comments.style.display = "none";
+  comments.className = "comments";
+  const addComment = (d, parent) => {
+    console.log(d, parent);
+    const div = cr("div", parent);
+    div.className = "bbsitem";
+    div.innerHTML = `<span class=date>${enc(new DateTime(d.date).toStringMin().substring(5))}</span>
+    by <span class=name title=${d.did}>${d.nickname}</span>
+      <div class=body>${enc(d.body)}</div>`;
+    return div;
+  };
+  console.log(items)
+  items.forEach(d => addComment(d, comments));
+
+  const combox = cr("div", comments);
+  const inp = cr("input", combox);
+  const btn = cr("button", combox);
+  btn.textContent = "送信";
+
+  name.onclick = () => {
+    if (comments.style.display == "none") {
+      comments.style.display = "block";
+    } else {
+      comments.style.display = "none";
     }
   };
-  load();
 
-  btn_write.onclick = async () => {
-    const item = {
-      did: inp_did.value,
-      body: inp_body.value,
-      date: new DateTime(),
-    };
+  const write = async (item) => {
     if (await fetchJSON("api/add", item) != "ok") {
       alert("書き込みに失敗しました");
-      return;
+      return false;
     }
-    inp_body.value = "";
-    await load();
+    return true;
   };
-};
+  btn.onclick = async () => {
+    const user = getUser();
+    console.log(user);
+    const comment = inp.value;
+    const item = {
+      id: t.id,
+      did: Base16.encode(user.did),
+      nickname: user.nickname,
+      body: comment,
+      date: new DateTime().toString(),
+    };
+    if (await write(item)) {
+      inp.value = "";
+      const add = addComment(item, null);
+      comments.insertBefore(add, combox);
+    }
+  };
+}
 </script>
 
 <style>
-.bbsitem {
-  border-top: 1px solid gray;
-  margin: 1em;
-  word-wrap: break-word;
+.comments {
+  padding-left: 1em;
 }
-.bbsitem .body {
-  border: 1px solid black;
-  padding: .5em;
+.bbsitem div {
+  display: inline-block;
+  margin-left: 1em;
 }
-.writebox {
-  border: 2px solid gray;
-  padding: 1em;
-  margin: 1em;
-}
-input, textarea {
-  width: 80%;
-}
-textarea {
-  height: 8em;
+.comments input {
+  width: 70vw;
 }
 </style>
-
-<link rel="stylesheet" href="https://unpkg.com/sakura.css/css/sakura.css" type="text/css">
-</head>
-
-<body>
-<h1>DID掲示板</h1>
-<div id=container></div>
-
-<div id=write class=writebox>
-  DID：<input type=text id=inp_did><br>
-  <textarea id=inp_body></textarea><br>
-  <button id=btn_write>書き込む（署名必須）</button><br>
-  ※DIDと署名は「<a href=https://code4fukui.github.io/Ed25519/>DID電子署名ツール</a>」で作れます
-</div>
-
-<footer>
-  <div>App: CC BY <a href=https://fukuno.jig.jp/3601>@taisukef</a></div>
-  <div>Lib: MIT <a href=https://github.com/code4fukui/Ed25519/>Ed25519</a></div>
-</footer>
-</body>
-
+  
 </html>
