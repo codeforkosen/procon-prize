@@ -1,6 +1,6 @@
-# DID掲示板 / DIDBBS
+# 高専プロコン掲示板
 
 ## demo
 
-- [DID掲示板](https://didbbs.code4fukui.org)
+- https://procon.code4fukui.org/
 
