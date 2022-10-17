@@ -28,6 +28,19 @@ import { Ed25519 } from "https://code4fukui.github.io/Ed25519/Ed25519.js";
 import { fix0 } from "https://js.sabae.cc/fix0.js";
 import { CSV } from "https://js.sabae.cc/CSV.js";
 
+const createYouTube = (link) => {
+  const n = link.match(/v=(.+)/);
+  console.log(link, n);
+  const id = n[1];
+  const iframe = document.createElement("iframe");
+  iframe.src = "https://www.youtube.com/embed/" + id;
+  iframe.title = "YouTube video player";
+  iframe.frameborder = "0";
+  iframe.allow = "accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture";
+  iframe.allowfullscreen = "allowfullscreen";
+  return iframe;
+};
+
 const sign = (user, text) => {
   const message = new TextEncoder().encode(text);
   const signature = Ed25519.sign({ privateKey: user.secret, message, encodeing: "binary" });
@@ -53,8 +66,21 @@ const getUser = () => {
   }
 };
 
-const url = "https://codeforkosen.github.io/kosen-opendata/data/procon/procon2022.csv";
-const opendata = await CSV.fetchJSON(url);
+const opendata = [];
+{
+  const url = "https://codeforkosen.github.io/kosen-opendata/data/procon/procon2022.csv";
+  const data = await CSV.fetchJSON(url);
+  data.forEach(d => opendata.push(d));
+}
+{
+  const url = "https://codeforkosen.github.io/kosen-opendata/data/procon/procon2022_hacku.csv";
+  const data = await CSV.fetchJSON(url);
+  opendata.forEach(d => {
+    const f = data.find(i => i.type == d.type && i.num == d.num);
+    Object.assign(d, f);
+  });
+}
+//console.log(opendata);
 
 const data = await fetchJSON("api/list");
 container.innerHTML = "";
@@ -76,7 +102,7 @@ for (const t of data) {
   topic.className = "topic";
   const name = cr("div", topic);
   const items = t.items;
-  name.innerHTML = `<a href="./#${t.id}" target=_blank>${t.type.substring(0, 2)}-${t.num}</a>: ${t.title + t.description} by ${t.kosen} (${items.length}件${d.photo ? " / 写真" : ""})`;
+  name.innerHTML = `<a href="./#${t.id}" target=_blank>${t.type.substring(0, 2)}-${t.num}</a>: ${t.title + t.description} by ${t.kosen} (${items.length}件${d.prize ? " / " + d.prize : ""})`;
   const comments = cr("div", topic);
   comments.style.display = pickid ? "block" : "none";
   comments.className = "comments";
@@ -129,13 +155,40 @@ for (const t of data) {
       comments.insertBefore(add, combox);
     }
   };
-  // photo & poster image
+  console.log(d);
+  // photo
   if (d.photo) {
     const img = new Image();
     img.loading = "lazy";
     img.src = d.photo;
     comments.appendChild(img);
   }
+  // hacku_tweet
+  if (d.hacku_tweet) {
+    const a = cr("a", comments); // todo: twitter embded
+    a.href = d.hacku_tweet;
+    a.textContent = "Hack U ツイート";
+    comments.appendChild(a);
+    cr("br", comments);
+  }
+  // hacku_interview
+  if (d.hacku_interview) {
+    //const youtube = createYouTube(d.hacku_interview); // todo: seek
+    //comments.appendChild(youtube);
+    const a = cr("a", comments);
+    a.href = d.hacku_interview;
+    a.textContent = "Hack U インタビュー動画";
+    console.log(d.hacku_interview);
+    comments.appendChild(a);
+    cr("br", comments);
+  }
+  cr("br", comments);
+  // youtube
+  if (d.youtube) {
+    const youtube = createYouTube(d.youtube);
+    comments.appendChild(youtube);
+  }
+  // poster image 
   const img = new Image();
   img.loading = "lazy";
   img.src = d.poster;
@@ -173,6 +226,10 @@ h1 a {
 .bbsitem img {
   width: 90vw;
   margin-top: .5em;
+}
+iframe {
+  width: 100%;
+  aspect-ratio: 16 / 9;
 }
 </style>
   
