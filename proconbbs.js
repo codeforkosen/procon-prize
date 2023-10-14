@@ -7,7 +7,7 @@ import { Base16 } from "https://code4fukui.github.io/Base16/Base16.js";
 const bbs = new JSONDB("bbs.json");
 
 if (bbs.data.length == 0) {
-  const url = "https://codeforkosen.github.io/kosen-opendata/data/procon/procon2022.csv"
+  const url = "https://codeforkosen.github.io/kosen-opendata/data/procon/procon2023.csv"
   const data = await CSV.fetchJSON(url);
   console.log(data);
   let id = 1;

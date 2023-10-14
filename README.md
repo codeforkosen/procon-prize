@@ -2,7 +2,8 @@
 
 ## demo
 
-- https://procon.code4fukui.org/
+- [高専プロコン掲示板#34](https://procon34.code4fukui.org/)
+- [高専プロコン掲示板#33](https://procon.code4fukui.org/)
 
 ## Usage
 
@@ -16,4 +17,4 @@ access [http://localhost:8001/](http://localhost:8001/)
 
 ## Opendata
 
-- [高専プロコン2022オープンデータ](https://github.com/codeforkosen/kosen-opendata/tree/main/data/procon/)
+- [高専プロコンオープンデータ](https://github.com/codeforkosen/kosen-opendata/tree/main/data/procon/)

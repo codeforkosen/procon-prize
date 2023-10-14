@@ -1,11 +1,11 @@
-<!DOCTYPE html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1.0,maximum-scale=1.0">
-<title>高専プロコン掲示板#33</title>
+<!DOCTYPE html><html lang="ja"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width"><link rel="icon" href="data:">
+<title>高専プロコン掲示板#34</title>
 
 <link rel="stylesheet" href="https://unpkg.com/sakura.css/css/sakura.css" type="text/css">
 </head>
 <body>
 
-<h1><a href=./>高専プロコン掲示板#33</a></h1>
+<h1><a href=./>高専プロコン掲示板#34</a></h1>
 
 <div id=container></div>
 
@@ -68,10 +68,11 @@ const getUser = () => {
 
 const opendata = [];
 {
-  const url = "https://codeforkosen.github.io/kosen-opendata/data/procon/procon2022.csv";
+  const url = "https://codeforkosen.github.io/kosen-opendata/data/procon/procon2023.csv";
   const data = await CSV.fetchJSON(url);
   data.forEach(d => opendata.push(d));
 }
+/*
 {
   const url = "https://codeforkosen.github.io/kosen-opendata/data/procon/procon2022_hacku.csv";
   const data = await CSV.fetchJSON(url);
@@ -80,6 +81,7 @@ const opendata = [];
     Object.assign(d, f);
   });
 }
+*/
 //console.log(opendata);
 
 const data = await fetchJSON("api/list");
@@ -102,7 +104,7 @@ for (const t of data) {
   topic.className = "topic";
   const name = cr("div", topic);
   const items = t.items;
-  name.innerHTML = `<a href="./#${t.id}" target=_blank>${t.type.substring(0, 2)}-${t.num}</a>: ${t.title + t.description} by ${t.kosen} (${items.length}件${d.prize ? " / " + d.prize : ""})`;
+  name.innerHTML = `<a href="./#${t.id}" target=_blank>${t.type.substring(0, 2)}-${t.num}</a>: ${t.title}${t.description ? " - " + t.description : ""} by ${t.kosen} (${items.length}件${d.prize ? " / " + d.prize : ""})`;
   const comments = cr("div", topic);
   comments.style.display = pickid ? "block" : "none";
   comments.className = "comments";
