@@ -1,23 +1,9 @@
 import { Server } from "https://js.sabae.cc/Server.js";
 import { JSONDB } from "https://js.sabae.cc/JSONDB.js";
-import { CSV } from "https://js.sabae.cc/CSV.js";
 import { Ed25519 } from "https://code4fukui.github.io/Ed25519/Ed25519.js";
 import { Base16 } from "https://code4fukui.github.io/Base16/Base16.js";
 
 const bbs = new JSONDB("bbs.json");
-
-if (bbs.data.length == 0) {
-  const url = "https://codeforkosen.github.io/kosen-opendata/data/procon/procon2023.csv"
-  const data = await CSV.fetchJSON(url);
-  console.log(data);
-  let id = 1;
-  data.forEach(d => {
-    d.id = id++;
-    d.items = [];
-    bbs.data.push(d);
-  });
-  bbs.write();
-}
 
 const verify = (did, text, sign) => {
   const message = new TextEncoder().encode(text);
@@ -38,8 +24,14 @@ class MyServer extends Server {
             throw new Error("illegal sign");
           }
         }
-        const topic = bbs.data.find(d => d.id == req.id);
-        topic.items.push(req);
+        const type = req.type;
+        const num = req.num;
+        const topic = bbs.data.find(d => d.type == type && d.num == num);
+        if (!topic) {
+          bbs.data.push({ type, num, items: [req] });
+        } else {
+          topic.items.push(req);
+        }
         bbs.write();
         return "ok";
       } catch (e) {

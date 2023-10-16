@@ -7,6 +7,7 @@
 
 <h1><a href=./>高専プロコン掲示板#34</a></h1>
 
+<input id=infilter placeholder="フィルター">
 <div id=container></div>
 
 <footer>
@@ -67,12 +68,9 @@ const getUser = () => {
   }
 };
 
-const opendata = [];
-{
-  const url = "https://codeforkosen.github.io/kosen-opendata/data/procon/procon2023.csv";
-  const data = await CSV.fetchJSON(url);
-  data.forEach(d => opendata.push(d));
-}
+const url = "https://codeforkosen.github.io/kosen-opendata/data/procon/procon2023.csv";
+const data = await CSV.fetchJSON(url);
+
 const prize = [];
 {
   const url = "https://codeforkosen.github.io/kosen-opendata/data/procon/procon2023_prize.csv";
@@ -80,8 +78,8 @@ const prize = [];
   data.forEach(d => prize.push(d));
 }
 
-const data = await fetchJSON("api/list");
-container.innerHTML = "";
+const bbsdata = await fetchJSON("api/list");
+
 const cr = (tag, p) => {
   const c = document.createElement(tag);
   if (p) {
@@ -90,122 +88,162 @@ const cr = (tag, p) => {
   return c;
 };
 const pickid = location.hash.substring(1);
-for (const t of data) {
-  if (pickid && t.id != pickid) {
-    continue;
+
+if (pickid) {
+  infilter.style.display = "none";
+}
+
+const deepContains = (obj, keyword) => {
+  for (const name in obj) {
+    const o = obj[name];
+    if (typeof o == "string") {
+      if (o.indexOf(keyword) != -1) {
+        return true;
+      }
+    } else if (Array.isArray(o)) {
+      for (const a of o) {
+        if (deepContains(a, keyword)) {
+          return true;
+        }
+      }
+    } else if (typeof o == "object") {
+      if (deepContains(o, keyword)) {
+        return true;
+      }
+    }
   }
-  const d = opendata.find(o => o.type == t.type && o.num == t.num);
+  return false;
+};
 
-  const topic = cr("div", container);
-  topic.className = "topic";
-  const name = cr("div", topic);
-  const items = t.items;
-  name.innerHTML = `<a href="./#${t.id}" target=_blank>${t.type.substring(0, 2)}-${t.num}</a>: ${t.title}${t.description ? " - " + t.description : ""} by ${t.kosen} (${items.length}件${d.prize ? " / " + d.prize : ""})`;
-  const comments = cr("div", topic);
-  comments.style.display = pickid ? "block" : "none";
-  comments.className = "comments";
-  const addComment = (d, parent) => {
-    console.log(d, parent);
-    const div = cr("div", parent);
-    div.className = "bbsitem";
-    div.innerHTML = `<span class=date>${enc(new DateTime(d.date).toStringMin().substring(5))}</span>
-    by <span class=name title=${d.did}>${d.nickname}</span>
-      <div class=body>${enc(d.body)}</div>`;
-    return div;
-  };
-  console.log(items)
-  items.forEach(d => addComment(d, comments));
-
-  const combox = cr("div", comments);
-  const inp = cr("input", combox);
-  const btn = cr("button", combox);
-  btn.textContent = "送信";
-
-  name.onclick = () => {
-    if (comments.style.display == "none") {
-      comments.style.display = "block";
-    } else {
-      comments.style.display = "none";
+const show = async () => {
+  container.innerHTML = "";
+  const filter = infilter.value;
+  
+  for (const t of data) {
+    if (pickid && t.id != pickid) {
+      continue;
     }
-  };
+    const bbs = bbsdata.find(o => o.type == t.type && o.num == t.num);
+    t.items = bbs ? bbs.items || [] : [];
 
-  const write = async (item) => {
-    if (await fetchJSON("api/add", item) != "ok") {
-      alert("書き込みに失敗しました");
-      return false;
+    if (filter && !deepContains(t, filter)) {
+      continue;
     }
-    return true;
-  };
-  btn.onclick = async () => {
-    const user = getUser();
-    const comment = inp.value;
-    const item = {
-      id: t.id,
-      did: Base16.encode(user.did),
-      nickname: user.nickname,
-      body: comment,
-      date: new DateTime().toString(),
+
+    const topic = cr("div", container);
+    topic.className = "topic";
+    const name = cr("div", topic);
+    const items = t.items;
+    name.innerHTML = `<a href="./#${t.id}" target=_blank>${t.type.substring(0, 2)}-${t.num}</a>: ${t.title}${t.description ? " - " + t.description : ""} by ${t.kosen} (${items.length}件${t.prize ? " / " + t.prize : ""})`;
+    const comments = cr("div", topic);
+    comments.style.display = pickid ? "block" : "none";
+    comments.className = "comments";
+    const addComment = (d, parent) => {
+      const div = cr("div", parent);
+      div.className = "bbsitem";
+      div.innerHTML = `<span class=date>${enc(new DateTime(d.date).toStringMin().substring(5))}</span>
+      by <span class=name title=${d.did}>${d.nickname}</span>
+        <div class=body>${enc(d.body)}</div>`;
+      return div;
     };
-    item.sign = Base16.encode(sign(user, item.body + "\n" + item.date));
-    if (await write(item)) {
-      inp.value = "";
-      const add = addComment(item, null);
-      comments.insertBefore(add, combox);
+    items.forEach(d => addComment(d, comments));
+
+    const combox = cr("div", comments);
+    const inp = cr("input", combox);
+    const btn = cr("button", combox);
+    btn.textContent = "送信";
+
+    name.onclick = () => {
+      if (comments.style.display == "none") {
+        comments.style.display = "block";
+      } else {
+        comments.style.display = "none";
+      }
+    };
+
+    const write = async (item) => {
+      if (await fetchJSON("api/add", item) != "ok") {
+        alert("書き込みに失敗しました");
+        return false;
+      }
+      return true;
+    };
+    btn.onclick = async () => {
+      const user = getUser();
+      const comment = inp.value;
+      const item = {
+        type: t.type,
+        num: t.num,
+        did: Base16.encode(user.did),
+        nickname: user.nickname,
+        body: comment,
+        date: new DateTime().toString(),
+      };
+      item.sign = Base16.encode(sign(user, item.body + "\n" + item.date));
+      if (await write(item)) {
+        inp.value = "";
+        const add = addComment(item, null);
+        comments.insertBefore(add, combox);
+      }
+    };
+    const d = t;
+    // photo
+    if (d.photo) {
+      const img = new Image();
+      img.loading = "lazy";
+      img.src = d.photo;
+      comments.appendChild(img);
     }
-  };
-  console.log(d);
-  // photo
-  if (d.photo) {
+    // hacku_tweet
+    if (d.hacku) {
+      const a = cr("a", comments); // todo: twitter embded
+      a.href = d.hacku;
+      a.textContent = "Hack U ポスト";
+      comments.appendChild(a);
+      cr("br", comments);
+    }
+    // hacku_interview
+    if (d.hacku_interview) {
+      //const youtube = createYouTube(d.hacku_interview); // todo: seek
+      //comments.appendChild(youtube);
+      const a = cr("a", comments);
+      a.href = d.hacku_interview;
+      a.textContent = "Hack U インタビュー動画";
+      console.log(d.hacku_interview);
+      comments.appendChild(a);
+      cr("br", comments);
+    }
+    cr("br", comments);
+    // youtube
+    if (d.youtube) {
+      const youtube = createYouTube(d.youtube);
+      comments.appendChild(youtube);
+    }
+    // poster image 
     const img = new Image();
     img.loading = "lazy";
-    img.src = d.photo;
+    img.src = d.poster;
     comments.appendChild(img);
-  }
-  // hacku_tweet
-  if (d.hacku) {
-    const a = cr("a", comments); // todo: twitter embded
-    a.href = d.hacku;
-    a.textContent = "Hack U ポスト";
-    comments.appendChild(a);
-    cr("br", comments);
-  }
-  // hacku_interview
-  if (d.hacku_interview) {
-    //const youtube = createYouTube(d.hacku_interview); // todo: seek
-    //comments.appendChild(youtube);
-    const a = cr("a", comments);
-    a.href = d.hacku_interview;
-    a.textContent = "Hack U インタビュー動画";
-    console.log(d.hacku_interview);
-    comments.appendChild(a);
-    cr("br", comments);
-  }
-  cr("br", comments);
-  // youtube
-  if (d.youtube) {
-    const youtube = createYouTube(d.youtube);
-    comments.appendChild(youtube);
-  }
-  // poster image 
-  const img = new Image();
-  img.loading = "lazy";
-  img.src = d.poster;
-  comments.appendChild(img);
-  // prize
-  if (d.prize) {
-    const ps = d.prize.split(",");
-    for (const p of ps) {
-      const div = cr("div", comments);
-      const pr = prize.find(i => i.prize == p);
-      if (pr) {
-        div.textContent = p + " (副賞: " + pr.sup_prize + ")";
-      } else {
-        div.textContent = p;
+    // prize
+    if (d.prize) {
+      const ps = d.prize.split(",");
+      for (const p of ps) {
+        const div = cr("div", comments);
+        const pr = prize.find(i => i.prize == p);
+        if (pr) {
+          div.textContent = p + " (副賞: " + pr.sup_prize + ")";
+        } else {
+          div.textContent = p;
+        }
+        comments.appendChild(div);
       }
-      comments.appendChild(div);
     }
   }
-}
+};
+
+show();
+infilter.onchange = () => show();
+
 </script>
 
 <style>
@@ -242,6 +280,9 @@ h1 a {
 iframe {
   width: 100%;
   aspect-ratio: 16 / 9;
+}
+#infilter {
+  width: 100%;
 }
 </style>
   
