@@ -87,7 +87,7 @@ const cr = (tag, p) => {
   }
   return c;
 };
-const pickid = location.hash.substring(1);
+const pickid = decodeURIComponent(location.hash.substring(1));
 
 if (pickid) {
   infilter.style.display = "none";
@@ -118,9 +118,9 @@ const deepContains = (obj, keyword) => {
 const show = async () => {
   container.innerHTML = "";
   const filter = infilter.value;
-  
+  console.log(pickid);
   for (const t of data) {
-    if (pickid && t.id != pickid) {
+    if (pickid && t.type + t.num != pickid) {
       continue;
     }
     const bbs = bbsdata.find(o => o.type == t.type && o.num == t.num);
@@ -134,7 +134,7 @@ const show = async () => {
     topic.className = "topic";
     const name = cr("div", topic);
     const items = t.items;
-    name.innerHTML = `<a href="./#${t.id}" target=_blank>${t.type.substring(0, 2)}-${t.num}</a>: ${t.title}${t.description ? " - " + t.description : ""} by ${t.kosen} (${items.length}件${t.prize ? " / " + t.prize : ""})`;
+    name.innerHTML = `<a href="./#${t.type}${t.num}" target=_blank>${t.type.substring(0, 2)}-${t.num}</a>: ${t.title}${t.description ? " - " + t.description : ""} by ${t.kosen} (${items.length}件${t.prize ? " / " + t.prize : ""})`;
     const comments = cr("div", topic);
     comments.style.display = pickid ? "block" : "none";
     comments.className = "comments";
