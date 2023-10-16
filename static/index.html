@@ -73,17 +73,12 @@ const opendata = [];
   const data = await CSV.fetchJSON(url);
   data.forEach(d => opendata.push(d));
 }
-/*
+const prize = [];
 {
-  const url = "https://codeforkosen.github.io/kosen-opendata/data/procon/procon2022_hacku.csv";
+  const url = "https://codeforkosen.github.io/kosen-opendata/data/procon/procon2023_prize.csv";
   const data = await CSV.fetchJSON(url);
-  opendata.forEach(d => {
-    const f = data.find(i => i.type == d.type && i.num == d.num);
-    Object.assign(d, f);
-  });
+  data.forEach(d => prize.push(d));
 }
-*/
-//console.log(opendata);
 
 const data = await fetchJSON("api/list");
 container.innerHTML = "";
@@ -167,10 +162,10 @@ for (const t of data) {
     comments.appendChild(img);
   }
   // hacku_tweet
-  if (d.hacku_tweet) {
+  if (d.hacku) {
     const a = cr("a", comments); // todo: twitter embded
-    a.href = d.hacku_tweet;
-    a.textContent = "Hack U ツイート";
+    a.href = d.hacku;
+    a.textContent = "Hack U ポスト";
     comments.appendChild(a);
     cr("br", comments);
   }
@@ -196,6 +191,20 @@ for (const t of data) {
   img.loading = "lazy";
   img.src = d.poster;
   comments.appendChild(img);
+  // prize
+  if (d.prize) {
+    const ps = d.prize.split(",");
+    for (const p of ps) {
+      const div = cr("div", comments);
+      const pr = prize.find(i => i.prize == p);
+      if (pr) {
+        div.textContent = p + " (副賞: " + pr.sup_prize + ")";
+      } else {
+        div.textContent = p;
+      }
+      comments.appendChild(div);
+    }
+  }
 }
 </script>
 
