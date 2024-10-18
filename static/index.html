@@ -1,17 +1,17 @@
 <!DOCTYPE html><html lang="ja"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width"><link rel="icon" href="data:">
-<title>高専プロコン掲示板#34</title>
+<title>高専プロコン掲示板#35</title>
 
 <link rel="stylesheet" href="https://unpkg.com/sakura.css/css/sakura.css" type="text/css">
 </head>
 <body>
 
-<h1><a href=./>高専プロコン掲示板#34</a></h1>
+<h1><a href=./>高専プロコン掲示板#35</a></h1>
 
 <input id=infilter placeholder="フィルター">
 <div id=container></div>
 
 <footer>
-  <div>DATA: CC BY <a href=https://github.com/codeforkosen/kosen-opendata/blob/main/data/procon/procon2023.csv>高専プロコン2023オープンデータ</a> by Code for KOSEN</div>
+  <div>DATA: CC BY <a href=https://github.com/codeforkosen/kosen-opendata/blob/main/data/procon/procon2024.csv>高専プロコン2024オープンデータ</a> by Code for KOSEN</div>
   <div>App: MIT License <a href=https://codeforkosen.github.io/>Code for KOSEN</a></div>
   <div>Trust: <a href=https://github.com/code4fukui/Ed25519>Ed25519</a></div>
   <div><a href=https://github.com/codeforkosen/proconbbs>src on GitHub</a></div>
@@ -68,15 +68,17 @@ const getUser = () => {
   }
 };
 
-const url = "https://codeforkosen.github.io/kosen-opendata/data/procon/procon2023.csv";
+const url = "https://codeforkosen.github.io/kosen-opendata/data/procon/procon2024.csv";
 const data = await CSV.fetchJSON(url);
 
 const prize = [];
+/*
 {
   const url = "https://codeforkosen.github.io/kosen-opendata/data/procon/procon2023_prize.csv";
   const data = await CSV.fetchJSON(url);
   data.forEach(d => prize.push(d));
 }
+*/
 
 const bbsdata = await fetchJSON("api/list");
 
@@ -220,10 +222,12 @@ const show = async () => {
       comments.appendChild(youtube);
     }
     // poster image 
-    const img = new Image();
-    img.loading = "lazy";
-    img.src = d.poster;
-    comments.appendChild(img);
+    if (d.poster) {
+      const img = new Image();
+      img.loading = "lazy";
+      img.src = d.poster;
+      comments.appendChild(img);
+    }
     // prize
     if (d.prize) {
       const ps = d.prize.split(",");
