@@ -27,9 +27,9 @@ export default fetchWeb(async (param, req, path, conninfo) => {
       const num = param.num;
       const topic = bbs.data.find(d => d.type == type && d.num == num);
       if (!topic) {
-        bbs.data.push({ type, num, items: [req] });
+        bbs.data.push({ type, num, items: [param] });
       } else {
-        topic.items.push(req);
+        topic.items.push(param);
       }
       bbs.write();
       return "ok";
