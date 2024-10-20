@@ -145,7 +145,7 @@ const show = async () => {
       div.className = "bbsitem";
       div.innerHTML = `<span class=date>${enc(new DateTime(d.date).toStringMin().substring(5))}</span>
       by <span class=name title=${d.did}>${d.nickname}</span>
-        <div class=body>${enc(d.body)}</div>`;
+        <div class=body>${enc(d.body || "")}</div>`;
       return div;
     };
     items.forEach(d => addComment(d, comments));
