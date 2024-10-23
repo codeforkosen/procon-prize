@@ -1,20 +1,20 @@
 <!DOCTYPE html><html lang="ja"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width"><link rel="icon" href="data:">
-<title>高専プロコン掲示板#35</title>
+<title>高専プロコン歴代受賞作品(#33-#35)</title>
 
 <link rel="stylesheet" href="https://unpkg.com/sakura.css/css/sakura.css" type="text/css">
 </head>
 <body>
 
-<h1><a href=./>高専プロコン掲示板#35</a></h1>
+<h1><a href=./>高専プロコン歴代受賞作品(#33-#35)</a></h1>
 
 <input id=infilter placeholder="フィルター">
+<div id=divprize></div>
 <div id=container></div>
 
 <footer>
-  <div>DATA: CC BY <a href=https://github.com/codeforkosen/kosen-opendata/blob/main/data/procon/procon2024.csv>高専プロコン2024オープンデータ</a> by Code for KOSEN</div>
+  <div>DATA: CC BY <a href=https://github.com/codeforkosen/kosen-opendata/blob/main/data/procon/>高専プロコンオープンデータ</a> by Code for KOSEN</div>
   <div>App: MIT License <a href=https://codeforkosen.github.io/>Code for KOSEN</a></div>
-  <div>Trust: <a href=https://github.com/code4fukui/Ed25519>Ed25519</a></div>
-  <div><a href=https://github.com/codeforkosen/proconbbs>src on GitHub</a></div>
+  <div><a href=https://github.com/codeforkosen/procon-prize>src on GitHub</a></div>
   <script type="module" src="https://code4fukui.github.io/qr-code/qr-code.js"></script>
   <qr-code></qr-code>
 </footer>
@@ -24,75 +24,48 @@
 import { fetchJSON } from "https://js.sabae.cc/fetchJSON.js";
 import { enc } from "https://js.sabae.cc/enc.js";
 import { DateTime } from "https://code4fukui.github.io/day-es/DateTime.js";
-import { TrustData } from "https://code4fukui.github.io/DataWithTrust/TrustData.js";
-import { Base16 } from "https://code4fukui.github.io/Base16/Base16.js";
-import { Ed25519 } from "https://code4fukui.github.io/Ed25519/Ed25519.js";
 import { fix0 } from "https://js.sabae.cc/fix0.js";
 import { CSV } from "https://js.sabae.cc/CSV.js";
+import { cr } from "https://js.sabae.cc/cr.js";
 
-const createYouTube = (link) => {
-  const n = link.match(/v=(.+)/);
-  console.log(link, n);
-  const id = n[1];
-  const iframe = document.createElement("iframe");
-  iframe.src = "https://www.youtube.com/embed/" + id;
-  iframe.title = "YouTube video player";
-  iframe.frameborder = "0";
-  iframe.allow = "accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture";
-  iframe.allowfullscreen = "allowfullscreen";
-  return iframe;
-};
-
-const sign = (user, text) => {
-  const message = new TextEncoder().encode(text);
-  const signature = Ed25519.sign({ privateKey: user.secret, message, encodeing: "binary" });
-  //const chk = Ed25519.verify({ signature, publicKey: user.did, message, encoding: "binary" });
-  //console.log(chk);
-  return signature;
-};
-
-const getUser = () => {
-  const did = localStorage.getItem("did");
-  const secret = localStorage.getItem("secret");
-  const nickname = localStorage.getItem("nickname");
-  if (did && secret) {
-    return { did: Base16.decode(did), secret: Base16.decode(secret), nickname };
-  }
-  {
-    const user = TrustData.createUser();
-    localStorage.setItem("did", Base16.encode(user.did));
-    localStorage.setItem("secret", Base16.encode(user.secret));
-    user.nickname = prompt("ニックネームを入力ください") || "noname";
-    localStorage.setItem("nickname", user.nickname);
-    return user;
-  }
-};
-
-const url = "https://codeforkosen.github.io/kosen-opendata/data/procon/procon2024.csv";
-const data = await CSV.fetchJSON(url);
-
-const prize = [];
-/*
-{
-  const url = "https://codeforkosen.github.io/kosen-opendata/data/procon/procon2023_prize.csv";
-  const data = await CSV.fetchJSON(url);
-  data.forEach(d => prize.push(d));
+const url = "https://codeforkosen.github.io/kosen-opendata/data/procon/procon.csv";
+const idx = await CSV.fetchJSON(url);
+idx.reverse();
+const data = [];
+const prize = ["すべて表示"];
+for (const item of idx) {
+  const data0 = await CSV.fetchJSON(item.csv);
+  data0.forEach(i => {
+    data.push(i);
+    const ps = i.prize?.split(",");
+    if (ps) {
+      ps.forEach(i => {
+        if (i.length == 0 || prize.indexOf(i) >= 0) return;
+        prize.push(i);
+      });
+    }
+  });
 }
-*/
 
-const bbsdata = await fetchJSON("api/list");
+console.log(prize);
+prize.forEach(i => {
+  const div = cr("div");
+  div.textContent = i;
+  divprize.appendChild(div);
+  div.onclick = () => {
+    const s = div.textContent;
+    infilter.value = s == "すべて表示" ? "" : s;
+    infilter.onchange();
+  };
+});
 
-const cr = (tag, p) => {
-  const c = document.createElement(tag);
-  if (p) {
-    p.appendChild(c);
-  }
-  return c;
-};
+console.log(data.length, data);
+
 const pickid = decodeURIComponent(location.hash.substring(1));
 
 if (pickid) {
   infilter.style.display = "none";
+  divprize.style.display = "none";
 }
 
 const deepContains = (obj, keyword) => {
@@ -122,12 +95,11 @@ const show = async () => {
   const filter = infilter.value;
   console.log(pickid);
   for (const t of data) {
-    if (pickid && t.type + t.num != pickid) {
+    if (pickid && t.year + t.type + t.num != pickid) {
       continue;
     }
-    const bbs = bbsdata.find(o => o.type == t.type && o.num == t.num);
-    t.items = bbs ? bbs.items || [] : [];
-
+    t.items = [];
+    
     if (filter && !deepContains(t, filter)) {
       continue;
     }
@@ -136,10 +108,11 @@ const show = async () => {
     topic.className = "topic";
     const name = cr("div", topic);
     const items = t.items;
-    name.innerHTML = `<a href="./#${t.type}${t.num}" target=_blank>${t.type.substring(0, 2)}-${t.num}</a>: ${t.title}${t.description ? " - " + t.description : ""} by ${t.kosen} (${items.length}件${t.prize ? " / " + t.prize : ""})`;
+    name.innerHTML = `<a href="./#${t.year}${t.type}${t.num}" target=_blank>${t.year}年 ${t.type?.substring(0, 2)}-${t.num}</a>: ${t.title}${t.description ? " - " + t.description : ""} by ${t.kosen} ${t.prize ? " / " + t.prize : ""}`;
     const comments = cr("div", topic);
     comments.style.display = pickid ? "block" : "none";
     comments.className = "comments";
+    /*
     const addComment = (d, parent) => {
       const div = cr("div", parent);
       div.className = "bbsitem";
@@ -149,7 +122,9 @@ const show = async () => {
       return div;
     };
     items.forEach(d => addComment(d, comments));
+    */
 
+    /*
     const combox = cr("div", comments);
     const inp = cr("input", combox);
     const btn = cr("button", combox);
@@ -188,6 +163,8 @@ const show = async () => {
         comments.insertBefore(add, combox);
       }
     };
+    */
+    
     const d = t;
     // photo
     if (d.photo) {
@@ -217,10 +194,12 @@ const show = async () => {
     }
     cr("br", comments);
     // youtube
+    /*
     if (d.youtube) {
       const youtube = createYouTube(d.youtube);
       comments.appendChild(youtube);
     }
+    */
     // poster image 
     if (d.poster) {
       const img = new Image();
@@ -245,6 +224,7 @@ const show = async () => {
   }
 };
 
+infilter.value = "NICT賞";
 show();
 infilter.onchange = () => show();
 
@@ -287,6 +267,17 @@ iframe {
 }
 #infilter {
   width: 100%;
+}
+#divprize {
+  margin: .5em 0;
+}
+#divprize > div {
+  display: inline-block;
+  margin: .2em .2em;
+  padding: .2em;
+  background-color: gray;
+  color: white;
+  font-size: 80%;
 }
 </style>
   
