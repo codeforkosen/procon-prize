@@ -1,20 +1,6 @@
-# 高専プロコン掲示板
+# 高専プロコン歴代受賞作品
 
-## demo
-
-- [高専プロコン掲示板#35](https://procon35.code4fukui.org/)
-- [高専プロコン掲示板#34](https://procon34.code4fukui.org/)
-- [高専プロコン掲示板#33](https://procon.code4fukui.org/)
-
-## Usage
-
-install [Deno](https://deno.land/) JavaScript Runtime
-
-```
-deno serve -A --port 8001 proconbbs.js
-```
-
-access [http://localhost:8001/](http://localhost:8001/)
+- [高専プロコン歴代受賞作品](https://codeforkosen.github.io/procon-prize/)
 
 ## Opendata
 
